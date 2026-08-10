@@ -33,6 +33,18 @@ High-dimensional datasets often contain redundant or noisy features that degrade
 
 ---
 
+## 🌐 Live Web Application
+We have deployed an interactive web application using **Streamlit** to allow users to test the trained machine learning model and perform real-time tumor diagnosis. 
+
+* **Live App Link:** [Access the Streamlit App Here] https://nature-inspired-feature-selection-for-breast-cancer-diagnosis.streamlit.app/
+
+### **How to Use the App:**
+1. Open the live link above.
+2. Use the interactive sidebar sliders to adjust patient tumor measurements (e.g., radius, texture, perimeter).
+3. Click the **"Run Prediction"** button to instantly evaluate whether the tumor is **Benign** or **Malignant** along with confidence metrics.
+
+---
+
 ## 🚀 Getting Started Locally
 
 ### **1. Clone the Repository**
