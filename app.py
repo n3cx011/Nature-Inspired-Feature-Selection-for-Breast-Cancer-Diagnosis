@@ -65,8 +65,8 @@ if st.button("Run Prediction", type="primary"):
     
     col1, col2 = st.columns(2)
     with col1:
-        # BUG FIX: Target 0 is Malignant, Target 1 is Benign!
-        if prediction[0] == 0:
+        #1 is Malignant, 0 is Benign (Matching the Colab brca.csv training!)
+        if prediction[0] == 1:
             st.error("### Result: MALIGNANT")
         else:
             st.success("### Result: BENIGN")
