@@ -39,7 +39,8 @@ if st.button("Run Prediction", type="primary"):
     raw_input_values = [user_inputs[idx] for idx in best_indices]
     
     # 2. Start with a full row of mean values for all 30 original features
-    full_row = X_full.mean().values.reshape(1, -1)
+    # (Added .copy() to fix the read-only error!)
+    full_row = X_full.mean().values.copy().reshape(1, -1)
     
     # 3. Overwrite the specific optimized feature positions with the user's slider values
     for i, idx in enumerate(best_indices):
@@ -64,5 +65,7 @@ if st.button("Run Prediction", type="primary"):
             st.success("### Result: BENIGN")
     with col2:
         confidence = np.max(probability[0]) * 100
+        st.metric(label="Confidence", value=f"{confidence:.2f}%")
+        st.info(f"Model: KNN using {len(best_indices)} features (Scaled)")
         st.metric(label="Confidence", value=f"{confidence:.2f}%")
         st.info(f"Model: KNN using {len(best_indices)} features (Scaled)")
