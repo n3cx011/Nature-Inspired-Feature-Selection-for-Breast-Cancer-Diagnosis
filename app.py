@@ -35,12 +35,18 @@ for idx in best_indices:
 st.subheader("📊 Live Prediction Result")
 
 if st.button("Run Prediction", type="primary"):
-    # Format input and scale it using the exact scaler from Colab
-    raw_input_vector = np.array([[user_inputs[idx] for idx in best_indices]])
+    # 1. Collect user slider inputs into a dataframe or 2D array in the exact feature order
+    raw_input_values = [user_inputs[idx] for idx in best_indices]
     
-    # Predict using your Colab-trained model
-    prediction = model.predict(raw_input_vector)
-    probability = model.predict_proba(raw_input_vector)
+    # 2. Convert to a 2D array format for the scaler
+    input_array = np.array([raw_input_values])
+    
+    # 3. CRITICAL: Scale the user input using the exact fitted scaler from Colab!
+    scaled_input_array = scaler.transform(input_array)
+    
+    # 4. Predict using the scaled input vector
+    prediction = model.predict(scaled_input_array)
+    probability = model.predict_proba(scaled_input_array)
     
     col1, col2 = st.columns(2)
     with col1:
@@ -51,4 +57,4 @@ if st.button("Run Prediction", type="primary"):
     with col2:
         confidence = np.max(probability[0]) * 100
         st.metric(label="Confidence", value=f"{confidence:.2f}%")
-        st.info(f"Loaded from Colab Model (.pkl) using {len(best_indices)} features.")
+        st.info(f"Model: KNN using {len(best_indices)} features (Scaled)")
