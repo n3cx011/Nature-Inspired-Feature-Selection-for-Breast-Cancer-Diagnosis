@@ -35,23 +35,27 @@ for idx in best_indices:
 st.subheader("📊 Live Prediction Result")
 
 if st.button("Run Prediction", type="primary"):
-    # 1. Start with a full row of mean values for all 30 original features
+    # 1. Collect the raw values from the user sliders first!
+    raw_input_values = [user_inputs[idx] for idx in best_indices]
+    
+    # 2. Start with a full row of mean values for all 30 original features
     full_row = X_full.mean().values.reshape(1, -1)
     
-    # 2. Overwrite the specific optimized feature positions with the user's slider values
+    # 3. Overwrite the specific optimized feature positions with the user's slider values
     for i, idx in enumerate(best_indices):
         full_row[0, idx] = raw_input_values[i]
         
-    # 3. Now scale the full 30-feature vector using the Colab scaler
+    # 4. Now scale the full 30-feature vector using the Colab scaler
     scaled_full_row = scaler.transform(full_row)
     
-    # 4. Extract ONLY the optimized feature columns from the scaled full array
-    scaled_input_array = pd.DataFrame(scaled_full_row, columns=feature_names).iloc[:, best_indices].values
+    # 5. Extract ONLY the optimized feature columns from the scaled array using numpy slicing
+    scaled_input_array = scaled_full_row[:, best_indices]
     
-    # 5. Predict using your trained model
+    # 6. Predict using your trained model
     prediction = model.predict(scaled_input_array)
     probability = model.predict_proba(scaled_input_array)
     
+    # 7. Display the results
     col1, col2 = st.columns(2)
     with col1:
         if prediction[0] == 1:
