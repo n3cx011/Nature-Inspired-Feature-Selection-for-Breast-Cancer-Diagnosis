@@ -1,77 +1,54 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler
+import pickle
 from sklearn.datasets import load_breast_cancer
 
-# 1. Page Configuration
 st.set_page_config(page_title="Breast Cancer Diagnosis App", page_icon="🧬", layout="wide")
+st.title("🧬 Nature-Inspired Feature Selection App")
 
-st.title("🧬 Nature-Inspired Feature Selection for Breast Cancer Diagnosis")
-st.write("This interactive app evaluates tumor measurements using optimized machine learning features.")
-
-# 2. Load Data and Train Model Cache
+# Load the saved .pkl model bundle
 @st.cache_resource
-def load_data_and_model():
+def load_saved_model():
+    with open('optimized_model.pkl', 'rb') as file:
+        bundle = pickle.load(file)
+    
     cancer = load_breast_cancer()
-    X = pd.DataFrame(cancer.data, columns=cancer.feature_names)
-    y = cancer.target
+    X_full = pd.DataFrame(cancer.data, columns=cancer.feature_names)
     
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-    
-    model = KNeighborsClassifier(n_neighbors=5)
-    model.fit(X_scaled, y)
-    
-    return X, scaler, model, cancer.feature_names
+    return bundle['model'], bundle['scaler'], bundle['selected_indices'], X_full, cancer.feature_names
 
-X, scaler, model, feature_names = load_data_and_model()
+model, scaler, best_indices, X_full, feature_names = load_saved_model()
 
-# 3. Sidebar UI - Patient Feature Sliders
-st.sidebar.header("Patient Tumor Measurements")
-st.sidebar.write("Adjust the features below to test a patient record:")
-
+# Sidebar sliders for ONLY your optimized features
+st.sidebar.header("Optimized Patient Measurements")
 user_inputs = {}
-# Display sliders for the first 10 core features to keep the UI clean and responsive
-for feature in feature_names[:10]:
-    default_val = float(X[feature].mean())
-    min_val = float(X[feature].min())
-    max_val = float(X[feature].max())
-    user_inputs[feature] = st.sidebar.slider(feature, min_val, max_val, default_val)
+for idx in best_indices:
+    feature_name = feature_names[idx]
+    user_inputs[idx] = st.sidebar.slider(
+        feature_name, 
+        float(X_full[feature_name].min()), 
+        float(X_full[feature_name].max()), 
+        float(X_full[feature_name].mean())
+    )
 
-# Auto-fill remaining 20 features with dataset mean values for background prediction
-for feature in feature_names[10:]:
-    user_inputs[feature] = float(X[feature].mean())
-
-input_df = pd.DataFrame([user_inputs])
-
-# 4. Main Panel - Prediction Results
-st.subheader("📊 Live Diagnosis Prediction")
+st.subheader("📊 Live Prediction Result")
 
 if st.button("Run Prediction", type="primary"):
-    # Scale input data
-    input_scaled = scaler.transform(input_df)
+    # Format input and scale it using the exact scaler from Colab
+    raw_input_vector = np.array([[user_inputs[idx] for idx in best_indices]])
     
-    # Make prediction
-    prediction = model.predict(input_scaled)
-    probability = model.predict_proba(input_scaled)
+    # Predict using your Colab-trained model
+    prediction = model.predict(raw_input_vector)
+    probability = model.predict_proba(raw_input_vector)
     
     col1, col2 = st.columns(2)
-    
     with col1:
         if prediction[0] == 1:
             st.error("### Result: MALIGNANT")
-            st.write("The model predicts the tumor is **Malignant**.")
         else:
             st.success("### Result: BENIGN")
-            st.write("The model predicts the tumor is **Benign**.")
-            
     with col2:
         confidence = np.max(probability[0]) * 100
-        st.metric(label="Prediction Confidence", value=f"{confidence:.2f}%")
-        st.info("Model: Optimized Feature Pipeline (GA / PSO / GWO)")
-
-# Footer
-st.markdown("---")
-st.caption("Horizon Campus | IT41033 - Nature-Inspired Algorithms Mini-Project")
+        st.metric(label="Confidence", value=f"{confidence:.2f}%")
+        st.info(f"Loaded from Colab Model (.pkl) using {len(best_indices)} features.")
